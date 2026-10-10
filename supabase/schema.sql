@@ -30,3 +30,39 @@ create policy "Users can update their own app state"
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+
+create table if not exists public.public_profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  name text not null,
+  handle text not null,
+  public_id text not null unique,
+  email text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.public_profiles enable row level security;
+
+grant select, insert, update on public.public_profiles to authenticated;
+
+create index if not exists public_profiles_handle_idx on public.public_profiles (lower(handle));
+create index if not exists public_profiles_public_id_idx on public.public_profiles (public_id);
+
+drop policy if exists "Signed in users can read public profiles" on public.public_profiles;
+create policy "Signed in users can read public profiles"
+  on public.public_profiles for select
+  to authenticated
+  using (true);
+
+drop policy if exists "Users can insert their own public profile" on public.public_profiles;
+create policy "Users can insert their own public profile"
+  on public.public_profiles for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update their own public profile" on public.public_profiles;
+create policy "Users can update their own public profile"
+  on public.public_profiles for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);

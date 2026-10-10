@@ -23,6 +23,50 @@ export const supabase = configured
 
 export type AppUser = User;
 
+type PublicProfileRow = {
+  user_id: string;
+  name: string;
+  handle: string;
+  public_id: string;
+  email: string | null;
+};
+
+function mergePublicProfiles(s: State, rows: PublicProfileRow[]) {
+  for (const row of rows) {
+    const existing = s.users.find((u) => u.id === row.user_id);
+    if (existing) {
+      existing.name = row.name || existing.name;
+      existing.handle = row.handle || existing.handle;
+      existing.publicId = row.public_id || existing.publicId;
+      existing.email = row.email || existing.email;
+    } else {
+      s.users.push({
+        id: row.user_id,
+        name: row.name,
+        handle: row.handle,
+        publicId: row.public_id,
+        email: row.email ?? undefined,
+        trustTenths: 1000,
+        profileComplete: true,
+        createdAt: Date.now(),
+      });
+    }
+  }
+}
+
+async function publishProfile(profile: State["users"][number]) {
+  if (!supabase) return;
+  const { error } = await supabase.from("public_profiles").upsert({
+    user_id: profile.id,
+    name: profile.name,
+    handle: profile.handle,
+    public_id: profile.publicId ?? shortPublicId(profile.id),
+    email: profile.email ?? null,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}
+
 
 export async function signInWithEmail(email: string) {
   if (!supabase) throw Error("Supabase is not configured.");
@@ -95,6 +139,12 @@ export async function remote(
     profile.profileComplete = Boolean(profile.name && profile.email);
     s.users.push(profile);
   }
+  const me = s.users.find((u) => u.id === uid)!;
+  await publishProfile(me);
+  const { data: profiles, error: profilesError } = await supabase
+    .from("public_profiles")
+    .select("user_id,name,handle,public_id,email");
+  if (!profilesError && profiles) mergePublicProfiles(s, profiles as PublicProfileRow[]);
   accrueTrust(s, now);
   let result: Record<string, unknown> = {};
   if (command) {
@@ -110,6 +160,7 @@ export async function remote(
     });
     s = outcome.state;
     result = outcome.result;
+    await publishProfile(s.users.find((u) => u.id === uid)!);
   }
   const { error: writeError } = await supabase.from("app_states").upsert({
     user_id: uid,
