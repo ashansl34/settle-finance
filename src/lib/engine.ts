@@ -608,10 +608,10 @@ export function execute(
       const toAccount =
         type === "transfer" ? accountName(str(c, "toAccount", 60)) : undefined;
       if (
-        !["Wallet", "Bank", "Savings"].includes(fromAccount) ||
-        (toAccount && !["Wallet", "Bank", "Savings"].includes(toAccount))
+        !["Personal Wallet", "Mobile Bank", "Savings"].includes(fromAccount) ||
+        (toAccount && !["Personal Wallet", "Mobile Bank", "Savings"].includes(toAccount))
       )
-        fail("Choose Wallet, Bank or Savings");
+        fail("Choose Wallet/Personal Wallet, Bank/Mobile Bank or Savings");
       if (type === "transfer" && fromAccount === toAccount)
         fail("Choose two different accounts");
       entityId = id();

@@ -401,7 +401,7 @@ export default function FinanceApp() {
           name: "fromAccount",
           label: type === "income" ? "Into account" : "From account",
           value: account,
-          options: ["Wallet", "Bank", "Savings"].map((x) => ({
+          options: ["Personal Wallet", "Mobile Bank", "Savings"].map((x) => ({
             value: x,
             label: x,
           })),
@@ -411,8 +411,8 @@ export default function FinanceApp() {
               {
                 name: "toAccount",
                 label: "To account",
-                value: "Bank",
-                options: ["Wallet", "Bank", "Savings"].map((x) => ({
+                value: "Mobile Bank",
+                options: ["Personal Wallet", "Mobile Bank", "Savings"].map((x) => ({
                   value: x,
                   label: x,
                 })),
@@ -477,8 +477,8 @@ export default function FinanceApp() {
         {
           name: "fromAccount",
           label: "Paid from",
-          value: "Bank",
-          options: ["Bank", "Wallet", "Savings"].map((x) => ({
+          value: "Mobile Bank",
+          options: ["Mobile Bank", "Personal Wallet", "Savings"].map((x) => ({
             value: x,
             label: x,
           })),
@@ -599,7 +599,7 @@ export default function FinanceApp() {
     );
   }
   function bankingPanel() {
-    const accounts = ["Wallet", "Bank", "Savings"].map((account) => ({
+    const accounts = ["Personal Wallet", "Mobile Bank", "Savings"].map((account) => ({
       account,
       balance: accountBalance(entries, account),
     }));
@@ -613,7 +613,7 @@ export default function FinanceApp() {
           <div>
             <span className="eyebrow">MOBILE BANKING</span>
             <h2>{money(bankBalance)}</h2>
-            <p>Wallet, bank and savings in one clean view.</p>
+            <p>Personal wallet, mobile bank and savings in one clean view.</p>
           </div>
           <span className="banking-card-mark">
             <CreditCard size={21} />
@@ -638,8 +638,8 @@ export default function FinanceApp() {
           ))}
         </div>
         <div className="banking-actions">
-          <button onClick={() => addEntry("income", "Bank")}>
-            <ArrowDownLeft size={17} /> Add to bank
+          <button onClick={() => addEntry("income", "Mobile Bank")}>
+            <ArrowDownLeft size={17} /> Add to mobile bank
           </button>
           <button onClick={() => addEntry("transfer")}>
             <RefreshCw size={17} /> Transfer
@@ -1631,7 +1631,7 @@ export default function FinanceApp() {
                 </section>
                 <section className="panel">
                   <h2>Your accounts</h2>
-                  {["Wallet", "Bank", "Savings"].map((account) => (
+                  {["Personal Wallet", "Mobile Bank", "Savings"].map((account) => (
                     <div
                       className="account-row"
                       data-testid={`account-${account.toLowerCase()}`}
@@ -1669,7 +1669,7 @@ export default function FinanceApp() {
                 <Search size={18} />
                 <input
                   aria-label="Search people"
-                  placeholder="Find someone by name or @handle…"
+                  placeholder="Search name, @handle or 000001 ID…"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -2511,6 +2511,20 @@ export default function FinanceApp() {
                   </span>
                   <button className="secondary" onClick={() => editProfile()}>
                     Edit profile
+                  </button>
+                  <button
+                    className="secondary"
+                    onClick={async () => {
+                      const shareText = `Add me on Settle. My Settle ID is ${me.publicId}. ${window.location.origin}`;
+                      try {
+                        await navigator.clipboard.writeText(shareText);
+                        setToast("Settle ID copied. Send it to your friend.");
+                      } catch {
+                        setToast(`Your Settle ID is ${me.publicId}`);
+                      }
+                    }}
+                  >
+                    Share my Settle ID
                   </button>
                   <div className="profile-details">
                     <span>

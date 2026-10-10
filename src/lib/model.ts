@@ -11,6 +11,7 @@ export type User = Row & {
   name: string;
   handle: string;
   publicId?: string;
+  shareSlug?: string;
   phoneNumber?: string;
   email?: string;
   age?: number;

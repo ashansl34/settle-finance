@@ -1,20 +1,21 @@
 import { Entry, Loan, State } from "./model";
 export const DAY = 86_400_000;
 export const accountName = (name: string) =>
-  name === "Cash" ? "Wallet" : name;
+  name === "Cash" || name === "Wallet" ? "Personal Wallet" : name === "Bank" ? "Mobile Bank" : name;
 export function accountBalance(entries: Entry[], account: string) {
+  const target = accountName(account);
   return entries.reduce(
     (n, e) =>
       n +
-      (e.type === "income" && accountName(e.fromAccount) === account
+      (e.type === "income" && accountName(e.fromAccount) === target
         ? e.amount
         : 0) -
-      (e.type === "expense" && accountName(e.fromAccount) === account
+      (e.type === "expense" && accountName(e.fromAccount) === target
         ? e.amount
         : 0) +
       (e.type === "transfer"
-        ? (accountName(e.toAccount ?? "") === account ? e.amount : 0) -
-          (accountName(e.fromAccount) === account ? e.amount : 0)
+        ? (accountName(e.toAccount ?? "") === target ? e.amount : 0) -
+          (accountName(e.fromAccount) === target ? e.amount : 0)
         : 0),
     0,
   );
