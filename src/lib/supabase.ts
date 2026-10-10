@@ -79,14 +79,24 @@ function mergePublicProfiles(s: State, rows: PublicProfileRow[]) {
 
 async function publishProfile(profile: State["users"][number]) {
   if (!supabase) return;
-  const { data: existing, error: existingError } = await supabase
+  let { data: existing, error: existingError } = await supabase
     .from("public_profiles")
     .select("profile_no,public_id,share_slug")
     .eq("user_id", profile.id)
     .maybeSingle();
+  const oldProfileSchema = existingError?.message?.includes("profile_no");
+  if (oldProfileSchema) {
+    const fallback = await supabase
+      .from("public_profiles")
+      .select("public_id")
+      .eq("user_id", profile.id)
+      .maybeSingle();
+    existing = fallback.data as typeof existing;
+    existingError = fallback.error;
+  }
   if (existingError) throw existingError;
 
-  let profileNo = (existing?.profile_no as number | null) ?? null;
+  let profileNo = oldProfileSchema ? null : ((existing?.profile_no as number | null) ?? null);
   if (!profileNo) {
     const { data: rows, error: rowsError } = await supabase
       .from("public_profiles")
@@ -110,16 +120,26 @@ async function publishProfile(profile: State["users"][number]) {
   profile.publicId = publicId;
   profile.shareSlug = shareSlug;
 
-  const { error } = await supabase.from("public_profiles").upsert({
-    user_id: profile.id,
-    name: profile.name,
-    handle: profile.handle,
-    public_id: publicId,
-    profile_no: profileNo,
-    share_slug: shareSlug,
-    email: profile.email ?? null,
-    updated_at: new Date().toISOString(),
-  });
+  const payload: Record<string, string | number | null> = oldProfileSchema
+    ? {
+        user_id: profile.id,
+        name: profile.name,
+        handle: profile.handle,
+        public_id: publicId,
+        email: profile.email ?? null,
+        updated_at: new Date().toISOString(),
+      }
+    : {
+        user_id: profile.id,
+        name: profile.name,
+        handle: profile.handle,
+        public_id: publicId,
+        profile_no: profileNo,
+        share_slug: shareSlug,
+        email: profile.email ?? null,
+        updated_at: new Date().toISOString(),
+      };
+  const { error } = await supabase.from("public_profiles").upsert(payload);
   if (error) throw error;
 }
 
@@ -152,7 +172,7 @@ function mergeSharedFriends(
 
 async function loadSharedFriends(s: State, uid: string) {
   if (!supabase) return;
-  const [{ data: requests }, { data: friendships }] = await Promise.all([
+  const [{ data: requests, error: requestError }, { data: friendships }] = await Promise.all([
     supabase
       .from("friend_requests_shared")
       .select("id,from_user,to_user,status")
@@ -162,11 +182,26 @@ async function loadSharedFriends(s: State, uid: string) {
       .select("id,user_a,user_b")
       .or(`user_a.eq.${uid},user_b.eq.${uid}`),
   ]);
+  if (requestError?.message?.includes("does not exist")) return;
   mergeSharedFriends(
     s,
     (requests ?? []) as SharedFriendRequestRow[],
     (friendships ?? []) as SharedFriendshipRow[],
   );
+  for (const request of (requests ?? []) as SharedFriendRequestRow[]) {
+    if (request.to_user === uid && request.status === "pending") {
+      const id = `friend_request_${request.id}`;
+      if (!s.notifications.some((n) => n.id === id))
+        s.notifications.push({
+          id,
+          userId: uid,
+          title: "New friend request",
+          body: `${s.users.find((u) => u.id === request.from_user)?.name ?? "Someone"} wants to connect with you`,
+          createdAt: Date.now(),
+          read: false,
+        });
+    }
+  }
 }
 
 
