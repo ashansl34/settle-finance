@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+functions/lib/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*-debug.log
+functions/.secret.local
+.firebase/

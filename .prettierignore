@@ -1,0 +1,8 @@
+node_modules
+.next
+functions/lib
+package-lock.json
+functions/package-lock.json
+test-results
+playwright-report
+*-debug.log
