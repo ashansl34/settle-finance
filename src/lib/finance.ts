@@ -135,11 +135,9 @@ export function totals(entries: Entry[], month: string) {
   return { balance: all, income, spend, remaining: income - spend };
 }
 export function assertSameIdentity(
-  before: { uid: string; phoneNumber: string | null },
+  before: { uid: string },
   after: { uid: string },
 ) {
-  if (!before.phoneNumber)
-    throw Error("Sign in with your phone before linking Google.");
   if (before.uid !== after.uid)
-    throw Error("Account identity changed. Linking was blocked.");
+    throw Error("Account identity changed. Sign in again with the same Gmail account.");
 }

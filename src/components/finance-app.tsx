@@ -27,8 +27,7 @@ import {
   BarChart3,
   MoreHorizontal,
 } from "lucide-react";
-import { signOut } from "firebase/auth";
-import { auth, linkGoogle } from "@/lib/firebase";
+import { signOut, supabase } from "@/lib/backend";
 import {
   Command,
   Entry,
@@ -195,8 +194,8 @@ export default function FinanceApp() {
         <button className="primary" onClick={() => void f.refresh()}>
           Try again
         </button>
-        {auth && (
-          <button className="text-button" onClick={() => void signOut(auth!)}>
+        {supabase && (
+          <button className="text-button" onClick={() => void signOut()}>
             Sign out
           </button>
         )}
@@ -252,7 +251,7 @@ export default function FinanceApp() {
     setMore(false);
   }
   function exitApp() {
-    if (auth && !demo) void signOut(auth);
+    if (supabase && !demo) void signOut();
     else {
       setToast("Demo mode is local to this browser. Open Profile to reset it.");
     }
@@ -269,7 +268,7 @@ export default function FinanceApp() {
       {
         name: "phoneNumber",
         label: "Phone number",
-        value: me.phoneNumber || f.user?.phoneNumber || "",
+        value: me.phoneNumber || "",
         help: "Use international format, like +94771234567.",
       },
       {
@@ -290,7 +289,7 @@ export default function FinanceApp() {
     open({
       title: setup ? "Set up your account." : "Make it yours.",
       description: setup
-        ? "This keeps the account tied to your phone identity. Your money records stay private."
+        ? "This keeps the account tied to your Gmail identity. Your money records stay private."
         : undefined,
       submit: setup ? "Create my profile" : "Save profile",
       fields: profileFields(),
@@ -309,7 +308,7 @@ export default function FinanceApp() {
           <p>
             Your dashboard is empty until you add your own money records,
             friends, groups and loans. Existing users keep their old data when
-            they sign in with the same phone account.
+            they sign in with the same Gmail account.
           </p>
         </div>
         <button className="primary" onClick={() => editProfile(true)}>
@@ -1972,7 +1971,7 @@ export default function FinanceApp() {
                     <small>
                       Expires {displayDate(sharedLink.expiresAt)}.{" "}
                       {demo
-                        ? "Demo links only work with this browser’s saved demo data. Use Firebase and a published URL to invite people on other devices."
+                        ? "Demo links only work with this browser’s saved demo data. Use Supabase and a published URL to invite people on other devices."
                         : "Anyone with this link can request to join. Group finances remain private until approved."}
                     </small>
                   </div>
@@ -2508,7 +2507,7 @@ export default function FinanceApp() {
                   <h2>{me.name}</h2>
                   <p>@{me.handle}</p>
                   <span className="badge purple">
-                    {demo ? "Demo identity" : "Phone verified"}
+                    {demo ? "Demo identity" : "Gmail verified"}
                   </span>
                   <button className="secondary" onClick={() => editProfile()}>
                     Edit profile
@@ -2517,7 +2516,7 @@ export default function FinanceApp() {
                     <span>
                       <strong>Phone</strong>
                       <small>
-                        {me.phoneNumber || f.user?.phoneNumber || "Not added"}
+                        {me.phoneNumber || "Not added"}
                       </small>
                     </span>
                     <span>
@@ -2571,24 +2570,15 @@ export default function FinanceApp() {
                   </div>
                   <button
                     className="secondary"
-                    onClick={async () => {
-                      if (demo) {
-                        setToast(
-                          "Google linking is available after Firebase phone sign-in.",
-                        );
-                        return;
-                      }
-                      try {
-                        await linkGoogle(f.user!);
-                        setToast(
-                          "Google linked to your existing phone account.",
-                        );
-                      } catch (e) {
-                        f.setError((e as Error).message);
-                      }
-                    }}
+                    onClick={() =>
+                      setToast(
+                        demo
+                          ? "Demo mode is local to this browser."
+                          : "You are already signed in with Gmail.",
+                      )
+                    }
                   >
-                    Link Google to this account
+                    Gmail account active
                   </button>
                   <button
                     className="text-button"
@@ -2631,7 +2621,7 @@ export default function FinanceApp() {
                   ) : (
                     <button
                       className="text-button"
-                      onClick={() => void signOut(auth!)}
+                      onClick={() => void signOut()}
                     >
                       <LogOut size={16} />
                       Sign out

@@ -4,34 +4,29 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start --hostname 0.0.0.0",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "functions:build": "tsc -p functions/tsconfig.json",
-    "test:rules": "firebase emulators:exec --project demo-settle --only firestore \"vitest run --config vitest.rules.config.ts\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:integration": "npm run functions:build && node integration/run-emulators.cjs"
+    "export": "next build",
+    "deploy:vercel-build": "npm run build"
   },
   "dependencies": {
-    "firebase": "^12.0.0",
+    "@supabase/supabase-js": "^2.117.3",
     "lucide-react": "^0.468.0",
     "next": "^16.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@firebase/rules-unit-testing": "^5.0.2",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "firebase-admin": "^13.0.0",
-    "firebase-functions": "^6.4.0",
-    "firebase-tools": "^15.31.0",
     "prettier": "^3.9.9",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.9.0",

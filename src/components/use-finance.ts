@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { auth, configured, remote } from "@/lib/firebase";
+import type { AppUser } from "@/lib/backend";
+import type { Session } from "@supabase/supabase-js";
+import { configured, getSession, onSessionChange, remote, supabase } from "@/lib/backend";
 import { Command, State, emptyState } from "@/lib/model";
 import { accrueTrust, execute, project } from "@/lib/engine";
 import { seed } from "@/lib/seed";
@@ -9,7 +10,7 @@ const KEY = "settle-demo-v1";
 export function useFinance() {
   const [state, setState] = useState<State | null>(null),
     [uid, setUid] = useState("ashan"),
-    [user, setUser] = useState<User | null>(null),
+    [user, setUser] = useState<AppUser | null>(null),
     [ready, setReady] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -18,11 +19,11 @@ export function useFinance() {
   const revision = useRef(0);
   const refresh = useCallback(async () => {
     if (configured) {
-      if (acting.current || auth?.currentUser?.uid !== uid) return;
+      if (acting.current || supabase == null || user?.id !== uid) return;
       const version = revision.current;
       try {
         const response = await remote();
-        if (version === revision.current && auth?.currentUser?.uid === uid) {
+        if (version === revision.current && user?.id === uid) {
           setState(response.state);
           setError("");
         }
@@ -33,29 +34,58 @@ export function useFinance() {
       accrueTrust(full.current, Date.now());
       setState(project(full.current, uid));
     }
-  }, [uid]);
+  }, [uid, user?.id]);
   useEffect(() => {
-    if (auth)
-      return onAuthStateChanged(auth, async (u) => {
+    if (configured) {
+      let mounted = true;
+      void getSession()
+        .then(async (session) => {
+          if (!mounted) return;
+          const version = ++revision.current;
+          const u = session?.user ?? null;
+          setUser(u);
+          setState(null);
+          setError("");
+          if (u) {
+            setUid(u.id);
+            try {
+              const response = await remote();
+              if (mounted && version === revision.current) setState(response.state);
+            } catch (e) {
+              if (mounted && version === revision.current)
+                setError((e as Error).message);
+            }
+          }
+          if (mounted && version === revision.current) setReady(true);
+        })
+        .catch((e: unknown) => {
+          if (mounted) {
+            setError((e as Error).message);
+            setReady(true);
+          }
+        });
+      const unsubscribe = onSessionChange(async (session: Session | null) => {
         const version = ++revision.current;
+        const u = session?.user ?? null;
         setUser(u);
         setState(null);
         setError("");
         if (u) {
-          setUid(u.uid);
+          setUid(u.id);
           try {
             const response = await remote();
-            if (
-              version === revision.current &&
-              auth?.currentUser?.uid === u.uid
-            )
-              setState(response.state);
+            if (version === revision.current) setState(response.state);
           } catch (e) {
             if (version === revision.current) setError((e as Error).message);
           }
         }
         if (version === revision.current) setReady(true);
       });
+      return () => {
+        mounted = false;
+        unsubscribe();
+      };
+    }
     try {
       const saved = localStorage.getItem(KEY);
       full.current = saved ? { ...emptyState(), ...JSON.parse(saved) } : seed();
@@ -87,7 +117,7 @@ export function useFinance() {
       let result: Record<string, unknown>;
       if (configured) {
         const response = await remote(command);
-        if (version !== revision.current || auth?.currentUser?.uid !== uid)
+        if (version !== revision.current || user?.id !== uid)
           throw Error("Your session changed. Refresh to see the latest state.");
         setState(response.state);
         result = response.result;

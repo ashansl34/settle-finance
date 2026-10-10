@@ -320,22 +320,9 @@ describe("Trust day calculations", () => {
   });
 });
 describe("Groups, privacy and identity", () => {
-  it("prevents identity changes or Google-first linking", () => {
-    expect(() =>
-      assertSameIdentity({ uid: "a", phoneNumber: null }, { uid: "a" }),
-    ).toThrow();
-    expect(() =>
-      assertSameIdentity(
-        { uid: "a", phoneNumber: "+94770000000" },
-        { uid: "b" },
-      ),
-    ).toThrow();
-    expect(() =>
-      assertSameIdentity(
-        { uid: "a", phoneNumber: "+94770000000" },
-        { uid: "a" },
-      ),
-    ).not.toThrow();
+  it("prevents Supabase identity changes", () => {
+    expect(() => assertSameIdentity({ uid: "a" }, { uid: "b" })).toThrow();
+    expect(() => assertSameIdentity({ uid: "a" }, { uid: "a" })).not.toThrow();
   });
   it("requires membership approval and keeps a canonical loan after leaving", () => {
     let s = run(initial(), {

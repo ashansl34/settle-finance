@@ -69,7 +69,7 @@ export function execute(
   const s = { ...emptyState(), ...structuredClone(source) },
     { uid, now, id } = ctx;
   const me = s.users.find((u) => u.id === uid);
-  if (!me) fail("Create your phone-verified profile first.");
+  if (!me) fail("Create your profile first.");
   const result: Record<string, unknown> = {};
   let entityId = uid;
   let participants = [uid];
