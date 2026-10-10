@@ -243,9 +243,16 @@ export async function remote(
   }
   const me = s.users.find((u) => u.id === uid)!;
   await publishProfile(me);
-  const { data: profiles, error: profilesError } = await supabase
+  let { data: profiles, error: profilesError } = await supabase
     .from("public_profiles")
     .select("user_id,name,handle,public_id,profile_no,share_slug,email");
+  if (profilesError?.message?.includes("profile_no")) {
+    const fallback = await supabase
+      .from("public_profiles")
+      .select("user_id,name,handle,public_id,email");
+    profiles = fallback.data as typeof profiles;
+    profilesError = fallback.error;
+  }
   if (!profilesError && profiles) mergePublicProfiles(s, profiles as PublicProfileRow[]);
   await loadSharedFriends(s, uid);
   accrueTrust(s, now);
