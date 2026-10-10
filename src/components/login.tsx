@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
-import { signInWithEmail } from "@/lib/backend";
+import { signInWithEmail, signInWithGoogle } from "@/lib/backend";
 import { ArrowUpRight, LockKeyhole } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState(""),
     [message, setMessage] = useState(""),
     [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [googleBusy, setGoogleBusy] = useState(false);
 
   async function emailLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -21,6 +22,18 @@ export default function Login() {
       setError((e as Error).message);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function googleLogin() {
+    setGoogleBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      await signInWithGoogle();
+    } catch (e) {
+      setError((e as Error).message);
+      setGoogleBusy(false);
     }
   }
 
@@ -40,11 +53,23 @@ export default function Login() {
           <span className="icon-box">
             <LockKeyhole size={18} />
           </span>
-          <h2>Secure Gmail OTP login</h2>
+          <h2>Continue with Google</h2>
           <p>
-            Enter your Gmail address. We’ll send a secure login link to your
-            inbox. No SMS OTP needed.
+            Google login is the fastest way to open Settle on phone and desktop.
+            Email link login stays as a backup.
           </p>
+          <button
+            className="google-login"
+            type="button"
+            disabled={googleBusy || busy}
+            onClick={googleLogin}
+          >
+            <span className="google-mark">G</span>
+            {googleBusy ? "Opening Google…" : "Continue with Google"}
+          </button>
+          <div className="login-divider">
+            <span>OR EMAIL LINK</span>
+          </div>
           <form onSubmit={emailLogin}>
             <label>
               Gmail or email address
@@ -68,15 +93,15 @@ export default function Login() {
               </div>
             )}
             <button className="primary" disabled={busy}>
-              {busy ? "Sending link…" : "Send Gmail login link"}
+              {busy ? "Sending link…" : "Send backup login link"}
               <ArrowUpRight size={18} />
             </button>
           </form>
           <div className="login-signup">
             Don’t have an account? <span>We’ll create it after email login</span>
           </div>
-          <div className="login-divider">
-            <span>NO SMS OTP</span>
+          <div className="login-note">
+            No SMS OTP needed. Google login avoids email rate limits.
           </div>
         </div>
         <p>

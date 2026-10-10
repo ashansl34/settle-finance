@@ -2309,6 +2309,38 @@ td {
   color: #0d7c7a;
   font-weight: 700;
 }
+.google-login {
+  width: 100%;
+  border: 1px solid #ddd3bc;
+  background: #fffaf0;
+  color: #1f2d35;
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 10px 24px #614c1f14;
+}
+.google-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: conic-gradient(from 45deg, #4285f4, #34a853, #fbbc05, #ea4335, #4285f4);
+  color: white;
+  font-weight: 900;
+  font-size: 13px;
+}
+.login-note {
+  color: #8a806d;
+  font-size: 11px;
+  text-align: center;
+  margin-top: 14px;
+}
+
 .login-divider {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
