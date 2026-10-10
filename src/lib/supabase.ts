@@ -1,6 +1,6 @@
 import { createClient, Session, User } from "@supabase/supabase-js";
 import { Command, emptyState, State } from "./model";
-import { accrueTrust, execute, newUser, project } from "./engine";
+import { accrueTrust, execute, newUser, project, shortPublicId } from "./engine";
 
 export const configured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -83,6 +83,7 @@ export async function remote(
 
   let s: State = row?.state ? ({ ...emptyState(), ...row.state } as State) : emptyState();
   const now = Date.now();
+  for (const existing of s.users) existing.publicId ??= shortPublicId(existing.id);
   if (!s.users.some((u) => u.id === uid)) {
     const profile = newUser(uid, now);
     profile.name =
@@ -118,3 +119,4 @@ export async function remote(
   if (writeError) throw writeError;
   return { state: project(s, uid), result };
 }
+

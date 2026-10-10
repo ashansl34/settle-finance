@@ -814,6 +814,7 @@ export function execute(
   return { state: s, result };
 }
 export function project(s: State, uid: string): State {
+  for (const u of s.users) u.publicId ??= shortPublicId(u.id);
   const active = s.groupMembers
     .filter((m) => m.userId === uid && m.status === "active")
     .map((m) => m.groupId);
@@ -867,6 +868,16 @@ export function project(s: State, uid: string): State {
     trustEvents: s.trustEvents.filter((t) => t.userId === uid),
   };
 }
+
+export function shortPublicId(uid: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < uid.length; i++) {
+    hash ^= uid.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `STL-${(hash >>> 0).toString(36).toUpperCase().padStart(6, "0").slice(0, 6)}`;
+}
+
 export function newUser(uid: string, now: number): User {
   return {
     id: uid,
@@ -875,6 +886,7 @@ export function newUser(uid: string, now: number): User {
       .replace(/[^a-zA-Z0-9]/g, "")
       .slice(0, 20)
       .toLowerCase()}`,
+    publicId: shortPublicId(uid),
     trustTenths: 1000,
     profileComplete: false,
     createdAt: now,

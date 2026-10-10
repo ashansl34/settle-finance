@@ -10,6 +10,7 @@ export type Row = { id: string };
 export type User = Row & {
   name: string;
   handle: string;
+  publicId?: string;
   phoneNumber?: string;
   email?: string;
   age?: number;

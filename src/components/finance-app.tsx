@@ -263,7 +263,7 @@ export default function FinanceApp() {
         name: "handle",
         label: "Unique handle",
         value: me.handle,
-        help: "Friends find you with this handle.",
+        help: "Friends find you with this handle. Your Settle ID is shorter and automatic.",
       },
       {
         name: "phoneNumber",
@@ -519,7 +519,7 @@ export default function FinanceApp() {
       >
         <div className="daily-budget-copy">
           <span className="eyebrow">
-            TODAY · {displayDate(new Date(`${today()}T12:00:00`).getTime())}
+            TODAY - {displayDate(new Date(`${today()}T12:00:00`).getTime())}
           </span>
           <h2>Daily spending</h2>
           <div className="daily-spent">
@@ -570,7 +570,7 @@ export default function FinanceApp() {
           >
             <span style={{ width: `${Math.min(100, budget.percent)}%` }} />
           </div>
-          <small>Green &lt;75% · Orange 75–99% · Red 100%+</small>
+          <small>Green &lt;75% - Orange 75–99% - Red 100%+</small>
           <button className="secondary" onClick={editDailyLimit}>
             {dailyLimit ? "Edit daily limit" : "Set daily limit"}
           </button>
@@ -590,7 +590,7 @@ export default function FinanceApp() {
           ["This month", periodSpending.monthly, monthName(monthNow())],
         ].map(([label, value, hint]) => (
           <div className="panel metric" key={label}>
-            <p>{label} · spending</p>
+            <p>{label} - spending</p>
             <h2>{money(Number(value))}</h2>
             <small>{hint}</small>
           </div>
@@ -933,7 +933,7 @@ export default function FinanceApp() {
         <span className="row-main">
           <strong>{name(borrowing ? l.lenderId : l.borrowerId)}</strong>
           <small>
-            {borrowing ? "You borrowed" : "You lent"} · {l.reason}
+            {borrowing ? "You borrowed" : "You lent"} - {l.reason}
           </small>
         </span>
         <span className="row-end">
@@ -976,9 +976,9 @@ export default function FinanceApp() {
                   {accountName(e.fromAccount)}
                   {e.toAccount ? ` → ${accountName(e.toAccount)}` : ""}
                   {e.recipientId
-                    ? ` → ${name(e.recipientId)} · ${e.paymentKind === "cash_movement" ? "Cash movement" : "Friend payment"}`
+                    ? ` → ${name(e.recipientId)} - ${e.paymentKind === "cash_movement" ? "Cash movement" : "Friend payment"}`
                     : ""}
-                  {e.sourceId ? " · Group payment" : ""}
+                  {e.sourceId ? " - Group payment" : ""}
                 </small>
               </span>
               <strong className={e.type === "income" ? "positive" : ""}>
@@ -1392,7 +1392,7 @@ export default function FinanceApp() {
                     A little peace of mind, in numbers.
                   </div>
                   <div className="balance-bottom">
-                    <span>PERSONAL · LKR</span>
+                    <span>PERSONAL - LKR</span>
                     <button onClick={() => go("My Balance")}>
                       View balance <ArrowUpRight size={16} />
                     </button>
@@ -1726,7 +1726,7 @@ export default function FinanceApp() {
                   .filter(
                     (u) =>
                       u.id !== uid &&
-                      `${u.name} ${u.handle}`
+                      `${u.name} ${u.handle} ${u.publicId ?? ""}`
                         .toLowerCase()
                         .includes(query.toLowerCase()),
                   )
@@ -1741,7 +1741,7 @@ export default function FinanceApp() {
                       <section className="panel person-card" key={u.id}>
                         <Avatar name={u.name} size="large" />
                         <h2>{u.name}</h2>
-                        <p>@{u.handle}</p>
+                        <p>@{u.handle} - {u.publicId}</p>
                         <span className="badge green">
                           <ShieldCheck size={13} />
                           {(u.trustTenths / 10).toFixed(1)}% trust
@@ -1982,7 +1982,7 @@ export default function FinanceApp() {
                   )
                   .map((i) => (
                     <p className="muted" key={i.id}>
-                      Invitation pending · {name(i.to)}
+                      Invitation pending - {name(i.to)}
                     </p>
                   ))}
               </section>
@@ -2092,7 +2092,7 @@ export default function FinanceApp() {
                           <div>
                             <strong>{e.description}</strong>
                             <p>
-                              {name(e.paidBy)} paid · {displayDate(e.createdAt)}
+                              {name(e.paidBy)} paid - {displayDate(e.createdAt)}
                             </p>
                           </div>
                           <strong>{money(e.amount)}</strong>
@@ -2505,7 +2505,7 @@ export default function FinanceApp() {
                 <section className="panel profile-card">
                   <Avatar name={me.name} size="large" />
                   <h2>{me.name}</h2>
-                  <p>@{me.handle}</p>
+                  <p>@{me.handle} - {me.publicId}</p>
                   <span className="badge purple">
                     {demo ? "Demo identity" : "Gmail verified"}
                   </span>
@@ -2522,6 +2522,10 @@ export default function FinanceApp() {
                     <span>
                       <strong>Email</strong>
                       <small>{me.email || f.user?.email || "Not added"}</small>
+                    </span>
+                    <span>
+                      <strong>Settle ID</strong>
+                      <small>{me.publicId}</small>
                     </span>
                     <span>
                       <strong>Age</strong>
@@ -2703,10 +2707,10 @@ export default function FinanceApp() {
                   .map((l) => (
                     <div className="simple-row" key={l.id}>
                       <span>
-                        {name(l.lenderId)} · {money(l.remainingBalance)}
+                        {name(l.lenderId)} - {money(l.remainingBalance)}
                       </span>
                       <strong>
-                        {overdueDays(l, Date.now())} complete overdue days · −
+                        {overdueDays(l, Date.now())} complete overdue days - −
                         {(l.penalizedDays / 10).toFixed(1)} pts
                       </strong>
                     </div>
@@ -2722,7 +2726,7 @@ export default function FinanceApp() {
                         <div>
                           <strong>{e.reason}</strong>
                           <p>
-                            {displayDate(e.createdAt)} · Loan{" "}
+                            {displayDate(e.createdAt)} - Loan{" "}
                             {e.loanId.slice(0, 12)}
                           </p>
                         </div>
@@ -2807,9 +2811,10 @@ export default function FinanceApp() {
           <footer>
             <span className="footer-brand">settle.</span> A little more
             balanced, every day.
+            <span className="designer-credit">Designed by Ashan Nandasena</span>
             <span>
               <ShieldCheck size={13} />
-              {demo ? "Demo data · saved on this browser" : "Private by design"}
+              {demo ? "Demo data - saved on this browser" : "Private by design"}
             </span>
           </footer>
         </main>
@@ -2989,7 +2994,7 @@ export default function FinanceApp() {
                     {currentChallenge.kind === "activation"
                       ? "Loan transfer"
                       : "Repayment"}{" "}
-                    · {money(currentChallenge.amount)}
+                    - {money(currentChallenge.amount)}
                   </strong>
                   <p>
                     {currentChallenge.receiverId === uid
@@ -3013,7 +3018,7 @@ export default function FinanceApp() {
                         } catch {}
                       }}
                     >
-                      I received the money · Generate code
+                      I received the money - Generate code
                     </button>
                   ) : (
                     <button
@@ -3027,7 +3032,7 @@ export default function FinanceApp() {
                     <div className="receipt-code">
                       <strong>{code.code}</strong>
                       <small>
-                        One use · expires{" "}
+                        One use - expires{" "}
                         {new Date(code.expiresAt).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -3054,7 +3059,7 @@ export default function FinanceApp() {
             .sort((a, b) => b.createdAt - a.createdAt)
             .map((a) => (
               <div className="audit-row" key={a.id}>
-                <span>{a.action.replaceAll(".", " · ")}</span>
+                <span>{a.action.replaceAll(".", " - ")}</span>
                 <small>
                   {name(a.actorId).split(" ")[0]} ·{" "}
                   {new Date(a.createdAt).toLocaleString()}
@@ -3232,3 +3237,4 @@ function FormDialog({
     </Dialog>
   );
 }
+

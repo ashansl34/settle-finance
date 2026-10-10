@@ -1538,6 +1538,15 @@ footer {
   letter-spacing: -0.6px;
   font-weight: 700;
 }
+.designer-credit {
+  color: #7f6c48;
+  background: linear-gradient(135deg, #fff7dd, #eef7f1);
+  border: 1px solid #eadfbf;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
 footer > span:last-child {
   margin-left: auto;
   display: flex;
@@ -3019,7 +3028,16 @@ td {
     margin-top: 24px;
     padding-bottom: 8px;
   }
-  footer > span:last-child {
+  .designer-credit {
+  color: #7f6c48;
+  background: linear-gradient(135deg, #fff7dd, #eef7f1);
+  border: 1px solid #eadfbf;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
+footer > span:last-child {
     margin-left: 0;
     width: 100%;
     padding-top: 3px;
@@ -3212,3 +3230,4 @@ select {
     scroll-behavior: auto !important;
   }
 }
+
