@@ -1843,6 +1843,19 @@ footer > span:last-child {
   font-weight: 550;
   margin-bottom: 3px;
 }
+.notice-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.notice-actions .primary,
+.notice-actions .secondary {
+  width: auto;
+  min-height: 36px;
+  padding: 8px 14px;
+}
+
 .notice {
   display: flex;
   align-items: flex-start;

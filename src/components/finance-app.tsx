@@ -2458,39 +2458,88 @@ export default function FinanceApp() {
               {s.notifications.length ? (
                 s.notifications
                   .sort((a, b) => b.createdAt - a.createdAt)
-                  .map((n) => (
-                    <div
-                      className={`notice ${n.read ? "read" : ""}`}
-                      key={n.id}
-                    >
-                      <span className="stat-icon lilac">
-                        <Bell size={18} />
-                      </span>
-                      <div className="row-main">
-                        <strong>{n.title}</strong>
-                        <p>{n.body}</p>
-                        <small>{displayDate(n.createdAt)}</small>
+                  .map((n) => {
+                    const friendRequestId = n.id.startsWith("friend_request_")
+                      ? n.id.replace("friend_request_", "")
+                      : null;
+                    const friendRequest = friendRequestId
+                      ? s.friendRequests.find(
+                          (r) =>
+                            r.id === friendRequestId &&
+                            r.to === uid &&
+                            r.status === "pending",
+                        )
+                      : null;
+                    return (
+                      <div
+                        className={`notice ${n.read ? "read" : ""}`}
+                        key={n.id}
+                      >
+                        <span className="stat-icon lilac">
+                          <Bell size={18} />
+                        </span>
+                        <div className="row-main">
+                          <strong>{n.title}</strong>
+                          <p>{n.body}</p>
+                          <small>{displayDate(n.createdAt)}</small>
+                          {friendRequest && (
+                            <div className="notice-actions">
+                              <button
+                                className="secondary"
+                                disabled={f.busy}
+                                onClick={() =>
+                                  void act(
+                                    {
+                                      type: "friend.respond",
+                                      requestId: friendRequest.id,
+                                      accept: false,
+                                    },
+                                    "Friend request declined.",
+                                  ).catch(() => {})
+                                }
+                              >
+                                Decline
+                              </button>
+                              <button
+                                className="primary"
+                                disabled={f.busy}
+                                onClick={() =>
+                                  void act(
+                                    {
+                                      type: "friend.respond",
+                                      requestId: friendRequest.id,
+                                      accept: true,
+                                    },
+                                    "You’re now connected.",
+                                  ).catch(() => {})
+                                }
+                              >
+                                Accept
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        {!n.read && !friendRequest && (
+                          <button
+                            className="icon-button"
+                            aria-label="Mark read"
+                            disabled={f.busy}
+                            onClick={() =>
+                              void act(
+                                {
+                                  type: "notification.read",
+                                  notificationId: n.id,
+                                },
+                                "Marked as read.",
+                              ).catch(() => {})
+                            }
+                          >
+                            <Check size={18} />
+                          </button>
+                        )}
                       </div>
-                      {!n.read && (
-                        <button
-                          className="icon-button"
-                          aria-label="Mark read"
-                          disabled={f.busy}
-                          onClick={() =>
-                            void act(
-                              {
-                                type: "notification.read",
-                                notificationId: n.id,
-                              },
-                              "Marked as read.",
-                            ).catch(() => {})
-                          }
-                        >
-                          <Check size={18} />
-                        </button>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
               ) : (
                 <Empty
                   title="All caught up."
