@@ -293,6 +293,18 @@ export async function remote(
   accrueTrust(s, now);
   let result: Record<string, unknown> = {};
   if (command) {
+    if (command.type === "friend.respond") {
+      const requestId = String(command.requestId ?? "");
+      if (!s.friendRequests.some((r) => r.id === requestId)) {
+        const { data: sharedRequest } = await supabase
+          .from("friend_requests_shared")
+          .select("id,from_user,to_user,status")
+          .eq("id", requestId)
+          .maybeSingle();
+        if (sharedRequest)
+          mergeSharedFriends(s, [sharedRequest as SharedFriendRequestRow], []);
+      }
+    }
     const outcome = execute(s, command, {
       uid,
       now,
