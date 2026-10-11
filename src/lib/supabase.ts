@@ -325,13 +325,18 @@ export async function remote(
         (r) => r.from === uid && r.to === other && r.status === "pending",
       );
       if (request) {
-        const { error } = await supabase.from("friend_requests_shared").upsert({
-          id: request.id,
-          from_user: request.from,
-          to_user: request.to,
-          status: request.status,
-          updated_at: new Date().toISOString(),
-        });
+        const { error } = await supabase
+          .from("friend_requests_shared")
+          .upsert(
+            {
+              id: request.id,
+              from_user: request.from,
+              to_user: request.to,
+              status: request.status,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "from_user,to_user" },
+          );
         if (error) throw error;
       }
     }
