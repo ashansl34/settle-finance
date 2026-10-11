@@ -325,19 +325,24 @@ export async function remote(
         (r) => r.from === uid && r.to === other && r.status === "pending",
       );
       if (request) {
+        const payload = {
+          id: request.id,
+          from_user: request.from,
+          to_user: request.to,
+          status: request.status,
+          updated_at: new Date().toISOString(),
+        };
         const { error } = await supabase
           .from("friend_requests_shared")
-          .upsert(
-            {
-              id: request.id,
-              from_user: request.from,
-              to_user: request.to,
-              status: request.status,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "from_user,to_user" },
-          );
-        if (error) throw error;
+          .upsert(payload, { onConflict: "from_user,to_user" });
+        if (error?.code === "23505" || error?.message?.includes("duplicate key")) {
+          const { error: updateError } = await supabase
+            .from("friend_requests_shared")
+            .update({ status: "pending", updated_at: new Date().toISOString() })
+            .eq("from_user", request.from)
+            .eq("to_user", request.to);
+          if (updateError) throw updateError;
+        } else if (error) throw error;
       }
     }
 
