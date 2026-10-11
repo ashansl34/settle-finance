@@ -137,3 +137,4 @@ grant select, insert, update on public.friend_requests_shared to authenticated;
 grant select, insert, update on public.friendships_shared to authenticated;
 grant select, insert, update on public.public_profiles to authenticated;
 
+
