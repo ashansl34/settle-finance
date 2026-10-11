@@ -138,3 +138,131 @@ grant select, insert, update on public.friendships_shared to authenticated;
 grant select, insert, update on public.public_profiles to authenticated;
 
 
+
+
+create table if not exists public.groups_shared (
+  id text primary key,
+  name text not null,
+  description text not null default '',
+  searchable boolean not null default false,
+  monthly_target bigint not null default 0,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.group_members_shared (
+  id text primary key,
+  group_id text not null references public.groups_shared(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null check (role in ('admin', 'member')),
+  status text not null check (status in ('pending', 'active', 'left')),
+  updated_at timestamptz not null default now(),
+  unique (group_id, user_id)
+);
+
+create table if not exists public.group_links_shared (
+  id text primary key,
+  group_id text not null references public.groups_shared(id) on delete cascade,
+  created_by uuid not null references auth.users(id) on delete cascade,
+  expires_at bigint not null,
+  revoked boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.group_invites_shared (
+  id text primary key,
+  group_id text not null references public.groups_shared(id) on delete cascade,
+  group_name text not null,
+  from_user uuid not null references auth.users(id) on delete cascade,
+  to_user uuid not null references auth.users(id) on delete cascade,
+  status text not null check (status in ('pending', 'accepted', 'declined')),
+  created_at bigint not null,
+  updated_at timestamptz not null default now(),
+  unique (group_id, to_user)
+);
+
+alter table public.groups_shared enable row level security;
+alter table public.group_members_shared enable row level security;
+alter table public.group_links_shared enable row level security;
+alter table public.group_invites_shared enable row level security;
+
+grant select, insert, update on public.groups_shared to authenticated;
+grant select, insert, update on public.group_members_shared to authenticated;
+grant select, insert, update on public.group_links_shared to authenticated;
+grant select, insert, update on public.group_invites_shared to authenticated;
+
+drop policy if exists "Signed in users can read shared groups" on public.groups_shared;
+create policy "Signed in users can read shared groups"
+  on public.groups_shared for select
+  to authenticated
+  using (true);
+
+drop policy if exists "Creators can write shared groups" on public.groups_shared;
+create policy "Creators can write shared groups"
+  on public.groups_shared for insert
+  to authenticated
+  with check (auth.uid() = created_by);
+
+drop policy if exists "Creators can update shared groups" on public.groups_shared;
+create policy "Creators can update shared groups"
+  on public.groups_shared for update
+  to authenticated
+  using (auth.uid() = created_by)
+  with check (auth.uid() = created_by);
+
+drop policy if exists "Signed in users can read shared group members" on public.group_members_shared;
+create policy "Signed in users can read shared group members"
+  on public.group_members_shared for select
+  to authenticated
+  using (true);
+
+drop policy if exists "Users can insert their shared group membership" on public.group_members_shared;
+create policy "Users can insert their shared group membership"
+  on public.group_members_shared for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update their shared group membership" on public.group_members_shared;
+create policy "Users can update their shared group membership"
+  on public.group_members_shared for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Signed in users can read shared group links" on public.group_links_shared;
+create policy "Signed in users can read shared group links"
+  on public.group_links_shared for select
+  to authenticated
+  using (true);
+
+drop policy if exists "Members can create shared group links" on public.group_links_shared;
+create policy "Members can create shared group links"
+  on public.group_links_shared for insert
+  to authenticated
+  with check (auth.uid() = created_by);
+
+drop policy if exists "Creators can update shared group links" on public.group_links_shared;
+create policy "Creators can update shared group links"
+  on public.group_links_shared for update
+  to authenticated
+  using (auth.uid() = created_by)
+  with check (auth.uid() = created_by);
+
+drop policy if exists "Users can read their shared group invites" on public.group_invites_shared;
+create policy "Users can read their shared group invites"
+  on public.group_invites_shared for select
+  to authenticated
+  using (auth.uid() = from_user or auth.uid() = to_user);
+
+drop policy if exists "Users can send shared group invites" on public.group_invites_shared;
+create policy "Users can send shared group invites"
+  on public.group_invites_shared for insert
+  to authenticated
+  with check (auth.uid() = from_user and from_user <> to_user);
+
+drop policy if exists "Invite participants can update shared group invites" on public.group_invites_shared;
+create policy "Invite participants can update shared group invites"
+  on public.group_invites_shared for update
+  to authenticated
+  using (auth.uid() = from_user or auth.uid() = to_user)
+  with check (auth.uid() = from_user or auth.uid() = to_user);
