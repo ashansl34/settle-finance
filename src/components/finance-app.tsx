@@ -1672,6 +1672,9 @@ export default function FinanceApp() {
                   placeholder="Search name, @handle or 000001 ID…"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void f.refresh();
+                  }}
                 />
               </div>
               {s.friendRequests.filter(
@@ -1721,65 +1724,81 @@ export default function FinanceApp() {
                     ))}
                 </section>
               )}
-              <div className="people-grid">
-                {s.users
-                  .filter(
-                    (u) =>
-                      u.id !== uid &&
-                      `${u.name} ${u.handle} ${u.publicId ?? ""}`
-                        .toLowerCase()
-                        .includes(query.toLowerCase()),
-                  )
-                  .map((u) => {
-                    const friend = friendIds.includes(u.id),
-                      pending = s.friendRequests.some(
-                        (r) =>
-                          r.status === "pending" &&
-                          [r.from, r.to].includes(u.id),
+              {(() => {
+                const people = s.users.filter(
+                  (u) =>
+                    u.id !== uid &&
+                    `${u.name} ${u.handle} ${u.publicId ?? ""}`
+                      .toLowerCase()
+                      .includes(query.toLowerCase()),
+                );
+                if (!people.length)
+                  return (
+                    <section className="panel">
+                      <Empty
+                        title={query ? "No person found." : "Search a friend to start."}
+                        body={
+                          query
+                            ? "Ask your friend to login, save their profile, then share their 000001 style Settle ID. Press Enter or tap refresh after they save."
+                            : "Type a name, @handle or Settle ID like 000001."
+                        }
+                      />
+                    </section>
+                  );
+                return (
+                  <div className="people-grid">
+                    {people.map((u) => {
+                      const friend = friendIds.includes(u.id),
+                        pending = s.friendRequests.some(
+                          (r) =>
+                            r.status === "pending" &&
+                            [r.from, r.to].includes(u.id),
+                        );
+                      return (
+                        <section className="panel person-card" key={u.id}>
+                          <Avatar name={u.name} size="large" />
+                          <h2>{u.name}</h2>
+                          <p>@{u.handle} - {u.publicId}</p>
+                          <span className="badge green">
+                            <ShieldCheck size={13} />
+                            {(u.trustTenths / 10).toFixed(1)}% trust
+                          </span>
+                          {friend ? (
+                            <>
+                              <button
+                                className="secondary"
+                                onClick={() => requestLoan(u.id)}
+                              >
+                                <HandCoins size={16} />
+                                Request money
+                              </button>
+                              <button
+                                className="secondary"
+                                onClick={() => friendPayment(u.id)}
+                              >
+                                Record payment
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              className="secondary"
+                              disabled={pending || f.busy}
+                              onClick={() =>
+                                void act(
+                                  { type: "friend.request", userId: u.id },
+                                  "Friend request sent.",
+                                ).catch(() => {})
+                              }
+                            >
+                              {pending ? "Request pending" : "+ Add friend"}
+                            </button>
+                          )}
+                        </section>
                       );
-                    return (
-                      <section className="panel person-card" key={u.id}>
-                        <Avatar name={u.name} size="large" />
-                        <h2>{u.name}</h2>
-                        <p>@{u.handle} - {u.publicId}</p>
-                        <span className="badge green">
-                          <ShieldCheck size={13} />
-                          {(u.trustTenths / 10).toFixed(1)}% trust
-                        </span>
-                        {friend ? (
-                          <>
-                            <button
-                              className="secondary"
-                              onClick={() => requestLoan(u.id)}
-                            >
-                              <HandCoins size={16} />
-                              Request money
-                            </button>
-                            <button
-                              className="secondary"
-                              onClick={() => friendPayment(u.id)}
-                            >
-                              Record payment
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            className="secondary"
-                            disabled={pending || f.busy}
-                            onClick={() =>
-                              void act(
-                                { type: "friend.request", userId: u.id },
-                                "Friend request sent.",
-                              ).catch(() => {})
-                            }
-                          >
-                            {pending ? "Request pending" : "+ Add friend"}
-                          </button>
-                        )}
-                      </section>
-                    );
-                  })}
-              </div>
+                    })}
+                  </div>
+                );
+              })()}
             </>
           )}
           {page === "Groups" && !currentGroup && (
