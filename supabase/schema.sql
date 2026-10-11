@@ -97,7 +97,7 @@ alter table public.friend_requests_shared enable row level security;
 alter table public.friendships_shared enable row level security;
 
 grant select, insert, update on public.friend_requests_shared to authenticated;
-grant select, insert on public.friendships_shared to authenticated;
+grant select, insert, update on public.friendships_shared to authenticated;
 
 drop policy if exists "Users can read their friend requests" on public.friend_requests_shared;
 create policy "Users can read their friend requests"
@@ -129,3 +129,11 @@ create policy "Users can create accepted friendships"
   on public.friendships_shared for insert
   to authenticated
   with check (auth.uid() = user_a or auth.uid() = user_b);
+
+
+-- Repair permissions for shared friend tables after manual resets.
+grant usage on schema public to anon, authenticated;
+grant select, insert, update on public.friend_requests_shared to authenticated;
+grant select, insert, update on public.friendships_shared to authenticated;
+grant select, insert, update on public.public_profiles to authenticated;
+
